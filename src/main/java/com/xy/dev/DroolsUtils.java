@@ -98,7 +98,7 @@ public class DroolsUtils {
                 .setEqualsBehavior(EqualityBehaviorOption.EQUALITY).setEventProcessingMode(EventProcessingOption.STREAM);
         // Configure the KieSession.
         kieBaseModel1.newKieSessionModel("alarmKS").setDefault(isdefault)
-                .setType(KieSessionModel.KieSessionType.STATEFUL);
+                .setType(KieSessionModel.KieSessionType.STATELESS);
         KieFileSystem kfs = ks.newKieFileSystem();
         kfs.writeKModuleXML(kproj.toXML());
         return kfs;

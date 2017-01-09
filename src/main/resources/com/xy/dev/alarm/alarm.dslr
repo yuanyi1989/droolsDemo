@@ -9,7 +9,7 @@ when
     并且 来源地址IP 等于 "127.0.0.1"
     end
 then
-    打印$alarm.fromAddress+" hello meet a alarm1"
+    打印$alarm.fromAddress+" hello meet a alarm hello world"
 end
 
 rule print_deviceName dialect "mvel"
@@ -19,7 +19,7 @@ when
     或者 设备名称等于"world"
     end
 then
-    打印$alarm.deviceName+" meet a alarm2"
+    //打印$alarm.deviceName+" meet a alarm2"
 end
 
 rule alarmType_notEqual_2 dialect "mvel"
@@ -28,7 +28,7 @@ when
     告警类型 非 2
     end
 then
-    打印"ignore a alarm"+$alarm.alarmType
+    //打印"ignore a alarm"+$alarm.alarmType
 end
 
 rule all_in_one_1 dialect "mvel"
@@ -41,7 +41,7 @@ when
     并且 告警类型 非 2
     end
 then
-    打印"hello world ignore a alarm"
+    //打印"hello world ignore a alarm"
 end
 
 rule all_in_one_2 dialect "mvel"
@@ -54,5 +54,5 @@ when
     或者 告警类型 等于 2
     end
 then
-    打印$alarm
+    //打印$alarm
 end

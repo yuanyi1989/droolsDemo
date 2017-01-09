@@ -16,9 +16,9 @@ import org.kie.internal.io.ResourceFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -27,19 +27,24 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AlarmApp {
 
     private static final ExecutorService service = Executors.newFixedThreadPool(10);
+    private static KieContainer kc;
     public static void main(String[] args) throws IOException, InterruptedException {
+        redeploy("1.0.0");
+        run();
+        new Scanner(System.in).next();
+        redeploy("1.0.1");
+        run();
+        service.shutdown();
+    }
 
-        final KieContainer kc = KieServices.Factory.get().getKieClasspathContainer();
+    public static void run() throws InterruptedException {
         final AlarmDataProvider provider = new AlarmDataProvider();
-
-        final int count = 187500;
-
-        long start = System.currentTimeMillis();
-        for(int i=0; i<8; i++){
+        final int count = 20;
+        for(int i=0; i<10; i++){
             service.execute(new Runnable() {
                 @Override
                 public void run() {
-                    StatelessKieSession session = kc.newStatelessKieSession("alarmKS");
+                    StatelessKieSession session = kc.newStatelessKieSession();
                     session.setGlobal("globalList", new ArrayList<String>());
                     List<AlarmData> list = new ArrayList<AlarmData>();
                     for(int i=0; i<count; i++){
@@ -49,10 +54,6 @@ public class AlarmApp {
                 }
             });
         }
-        service.shutdown();
-        service.awaitTermination(100, TimeUnit.SECONDS);
-        long end = System.currentTimeMillis();
-        System.err.println(end-start);
     }
 
 
@@ -68,10 +69,10 @@ public class AlarmApp {
     }
 
 
-    private static void changeVersion() {
+    private static void redeploy(String version) {
 
         KieServices kieServices = KieServices.Factory.get();
-        final ReleaseId releaseId = kieServices.newReleaseId("com.xy.dev", "alarm", "1.0.0");
+        final ReleaseId releaseId = kieServices.newReleaseId("com.xy.dev", "alarm", version);
         KieRepository repository = kieServices.getRepository();
 
         List<ResourceWrapper> resources = getResourceWrappers();
@@ -80,9 +81,7 @@ public class AlarmApp {
 
         KieContainer kieContainer = kieServices.newKieContainer(releaseId);
         kieContainer.updateToVersion(releaseId);
-
-        KieSession session2 = kieContainer.newKieSession();
-        sessionHolder.set(session2);
+        kc = kieContainer;
     }
 
     private static List<ResourceWrapper> getResourceWrappers() {
