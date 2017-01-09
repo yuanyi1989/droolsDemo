@@ -1,0 +1,40 @@
+package com.xy.dev;
+
+import com.xy.dev.entity.Order;
+import com.xy.dev.entity.OrderStatus;
+import com.xy.dev.entity.User
+import java.util.Date
+import org.drools.core.util.DateUtils;
+import com.xy.dev.SmsHelper;
+
+
+/**用户付款**/
+rule pay_order dialect "mvel" when
+    $order : Order(status == OrderStatus.ACCEPTED)
+then
+
+    modify($order){
+        status = OrderStatus.PAYED
+    }
+    System.out.println("用户付款：共"+$order.getFinalPrice()+"元");
+end
+
+/**配送规则**/
+rule deliver_order dialect "mvel" when
+    $order : Order(status == OrderStatus.DELIVERING)
+then
+    modify($order){
+        status = OrderStatus.ARRIVED
+    }
+    //SmsHelper.sendSMS($order.user.phone, "您的外卖已经送到");
+ end
+
+
+rule user_check_order dialect "mvel" when
+    $order : Order(status == OrderStatus.ARRIVED)
+then
+    modify($order){
+        status = OrderStatus.FINISH
+    }
+    System.out.println("用户确认收货");
+end

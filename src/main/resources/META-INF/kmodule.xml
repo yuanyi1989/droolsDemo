@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kmodule
+        xmlns="http://www.drools.org/xsd/kmodule">
+
+    <kbase name="merchantKB" packages="com.xy.dev.dsl" >
+        <ksession name="merchantKS"/>
+        <ksession name="merchantKS2" type="stateless"/>
+    </kbase>
+
+    <kbase name="alarmKB" packages="com.xy.dev.alarm" >
+        <ksession name="alarmKS"/>
+    </kbase>
+
+</kmodule>

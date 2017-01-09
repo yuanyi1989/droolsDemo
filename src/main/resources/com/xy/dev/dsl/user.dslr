@@ -1,0 +1,30 @@
+package com.xy.dev.dsl;
+
+/**用户付款**/
+rule pay_order dialect "mvel"
+when
+    订单状态为商家已接受
+then
+    更新订单状态为已支付
+    保存订单
+end
+
+/**配送规则**/
+rule deliver_order dialect "mvel"
+when
+    订单状态为配送中
+
+then
+    更新订单状态为已送达
+    保存订单
+end
+
+
+rule user_check_order dialect "mvel"
+when
+    订单状态为已送达
+then
+    更新订单状态为完成
+    保存订单
+    打印字符串#用户确认收货
+end

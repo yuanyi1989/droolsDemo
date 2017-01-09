@@ -1,0 +1,62 @@
+
+
+package com.xy.dev.dsl;
+
+import com.xy.dev.entity.Order;
+import com.xy.dev.entity.OrderStatus;
+import com.xy.dev.entity.User;
+import com.xy.dev.coupon.Coupon;
+import java.util.Date;
+import java.util.Arrays;
+import org.drools.core.util.DateUtils;
+import function com.xy.dev.SmsHelper.sendSMS;
+
+
+//计算最初的价格
+rule caculateFirstPrice dialect "mvel"
+when
+    如果有新创建订单
+then
+    订单价格增加$order.price * $order.amount
+    打印字符串#厨师开始制作菜品
+end
+//计算距离价格
+rule caculateDistancePrice dialect "mvel"
+when
+    如果有新创建订单
+then
+    订单价格 = 订单价格 + 订单用户距离价格因素
+    //订单价格增加订单用户距离价格因素
+end
+//计算时间价格
+rule caculateTimePrice dialect "mvel"
+when
+    如果有新创建订单
+    并且
+    下单时间超过12点
+then
+    订单价格减少5
+end
+
+
+rule changeACCEPTstatus dialect "mvel"
+when
+    如果有新创建订单
+then
+    更新订单状态为商家已接受
+    保存订单
+    打印字符串#计算价格完成，接受订单
+ end
+
+
+/**处理订单规则**/
+rule accept_order dialect "mvel"
+when
+    如果有已支付订单
+then
+    更新订单状态为配送中
+    保存订单
+    打印字符串#厨师开始制作菜品
+    打印字符串#制作菜品完毕，开始配送
+    发送邮件hello world
+end

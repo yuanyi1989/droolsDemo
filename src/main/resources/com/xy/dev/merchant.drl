@@ -1,0 +1,64 @@
+package com.xy.dev;
+
+import com.xy.dev.entity.Order;
+import com.xy.dev.entity.OrderStatus;
+import com.xy.dev.entity.User;
+import com.xy.dev.coupon.Coupon;
+import java.util.Date;
+import org.drools.core.util.DateUtils;
+
+
+/**
+    接受订单规则
+**/
+//计算最初的价格
+rule caculateFirstPrice dialect "mvel" when
+    $order : Order(status == OrderStatus.CREATED, date != null)
+then
+    $order.finalPrice = $order.finalPrice + $order.price * $order.amount;
+end
+//计算距离价格
+rule caculateDistancePrice dialect "mvel" when
+    $order : Order(status == OrderStatus.CREATED, date != null)
+then
+
+    $order.finalPrice = $order.finalPrice + $order.user.distance;
+end
+//计算时间价格
+rule caculateTimePrice dialect "mvel" when
+    $order : Order(status == OrderStatus.CREATED, date != null)
+    Order(this == $order, date.hours == 13)
+then
+    $order.finalPrice = $order.finalPrice + 4;
+end
+
+//计算优惠券价格
+rule coupon_price dialect "mvel" when
+    $order : Order(status == OrderStatus.CREATED,
+                    date != null)
+    $coupon : Coupon(user == $order.user)
+then
+    $order.finalPrice = $order.finalPrice - $coupon.price;
+    System.out.println("通过优惠券减免："+$coupon.price);
+end
+
+rule changeACCEPTstatus dialect "mvel" when
+    $order : Order(status == OrderStatus.CREATED)
+then
+    modify($order){status = OrderStatus.ACCEPTED}
+    System.out.println("计算订单价格完成，接受订单");
+    System.out.println("总价格："+$order.getFinalPrice());
+ end
+
+
+/**处理订单规则**/
+rule accept_order dialect "mvel" when
+    $order : Order(status == OrderStatus.PAYED)
+then
+
+    modify($order){
+        status = OrderStatus.DELIVERING
+    }
+    System.out.println("厨师开始制作菜品");
+    System.out.println("制作菜品完毕，开始配送");
+end

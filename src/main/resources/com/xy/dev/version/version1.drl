@@ -1,0 +1,10 @@
+package com.xy.dev.version;
+
+import com.xy.dev.entity.Order;
+import com.xy.dev.entity.OrderStatus;
+
+rule version1 dialect "mvel" when
+    $order : Order(status == OrderStatus.CREATED)
+then
+    System.out.println("hello world");
+end
