@@ -8,7 +8,7 @@
     </kbase>
 
     <kbase name="alarmKB" packages="com.xy.dev.alarm" >
-        <ksession name="alarmKS"/>
+        <ksession name="alarmKS" type="stateless"/>
     </kbase>
 
 </kmodule>

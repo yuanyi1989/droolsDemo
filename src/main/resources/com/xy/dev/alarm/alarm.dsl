@@ -12,4 +12,4 @@
 [condition] 告警类型{operate}{equalProp}=alarmType {operate} {equalProp}
 [condition] 严重程度{operate}{equalProp}=alarmLevel {operate} {equalProp}
 [condition] 紧急程度{operate}{equalProp}=alarmUrgent {operate} {equalProp}
-[consequence] 打印{content}=System.out.println({content})
+[consequence] 打印{content}=globalList.add({content})

@@ -10,11 +10,15 @@ import org.kie.api.builder.ReleaseId;
 import org.kie.api.io.Resource;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.StatelessKieSession;
 import org.kie.internal.io.ResourceFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -22,46 +26,33 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class AlarmApp {
 
-    public static void main(String[] args) throws IOException {
+    private static final ExecutorService service = Executors.newFixedThreadPool(10);
+    public static void main(String[] args) throws IOException, InterruptedException {
 
-        KieContainer kc = KieServices.Factory.get().getKieClasspathContainer();
-        sessionHolder.set(kc.newKieSession("alarmKS"));
-
+        final KieContainer kc = KieServices.Factory.get().getKieClasspathContainer();
         final AlarmDataProvider provider = new AlarmDataProvider();
-        //自动生成fact
-        //autoGenerateFact(provider);
-        for(int i=0; i<1000000; i++){
-            sessionHolder.get().insert(provider.next());
-        }
-        /*//10秒后停止当前session
-        new Thread(new Runnable() {
-            public void run() {
-                //10秒后停止
-                KieSession old = sessionHolder.get();
-                try {
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
-                    return;
-                }
-                old.dispose();
-            }
-        }).start();*/
+
+        final int count = 187500;
 
         long start = System.currentTimeMillis();
-
-        sessionHolder.get().fireAllRules();
+        for(int i=0; i<8; i++){
+            service.execute(new Runnable() {
+                @Override
+                public void run() {
+                    StatelessKieSession session = kc.newStatelessKieSession("alarmKS");
+                    session.setGlobal("globalList", new ArrayList<String>());
+                    List<AlarmData> list = new ArrayList<AlarmData>();
+                    for(int i=0; i<count; i++){
+                        list.add(provider.next());
+                    }
+                    session.execute(list);
+                }
+            });
+        }
+        service.shutdown();
+        service.awaitTermination(100, TimeUnit.SECONDS);
         long end = System.currentTimeMillis();
         System.err.println(end-start);
-
-
-        //更换规则
-       /* System.out.println("enter any key to continue");
-        new Scanner(System.in).next();
-
-        changeVersion();
-        autoGenerateFact(provider);
-        sessionHolder.get().fireUntilHalt();*/
-
     }
 
 

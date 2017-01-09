@@ -1,7 +1,7 @@
 package com.xy.dev.alarm;
 
 import java.net.URL;
-
+global java.util.List globalList;
 rule deviceName_equals_hello dialect "mvel"
 when
     有一个告警

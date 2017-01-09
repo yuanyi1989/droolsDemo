@@ -1,5 +1,7 @@
 package com.xy.dev;
 
+import com.xy.dev.alarm.AlarmData;
+import com.xy.dev.dataProvider.AlarmDataProvider;
 import com.xy.dev.dataProvider.OrderProvider;
 import org.drools.core.common.InternalAgenda;
 import org.kie.api.KieServices;
@@ -9,6 +11,11 @@ import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -17,36 +24,27 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class App
 {
+    private static final ExecutorService service = Executors.newFixedThreadPool(10);
+    private static final List<String> list = new ArrayList<String>(2000000);
     public static void main( String[] args ) throws InterruptedException, IOException {
-        KieContainer kc = KieServices.Factory.get().getKieClasspathContainer();
-        sessionHolder.set(kc.newKieSession("merchantKS"));
 
-        final OrderProvider provider = new OrderProvider();
-        //自动生成fact
-        autoGenerateFact(provider);
-
-        //10秒后停止当前session
-        new Thread(new Runnable() {
-            public void run() {
-                //10秒后停止
-            KieSession old = sessionHolder.get();
-                try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-                old.dispose();
+        final AlarmDataProvider provider = new AlarmDataProvider();
+        long start = System.currentTimeMillis();
+        for(int i=0; i<8; i++){
+            service.execute(new Task(187500));
         }
-        }).start();
-
-        sessionHolder.get().fireUntilHalt();
-        System.out.println("stop-----------------------");
-
-
+        service.shutdown();
+        service.awaitTermination(100, TimeUnit.SECONDS);
+        System.out.print(System.currentTimeMillis()-start);
 
         //更换规则
         //changeVersion();
     }
+
+    private static void action(String obj){
+        list.add(obj);
+    }
+
 
     private static void autoGenerateFact(final OrderProvider provider) {
         new Thread(new Runnable() {
@@ -91,6 +89,42 @@ public class App
         sessionHolder.get().fireUntilHalt();
     }
 
+
+    private static class Task implements  Runnable{
+
+        private int count;
+        private Task(int count){
+            this.count = count;
+        }
+        @Override
+        public void run() {
+            AlarmDataProvider provider = new AlarmDataProvider();
+            for(int i=0; i<count; i++){
+                AlarmData data = provider.next();
+                if(data.getDeviceName().equals("hello") && data.getFromAddress().split(":")[0].equals("127.0.0.1")){
+                    action("hello meet a alarm");
+                }
+                if(data.getDeviceName().equals("hello") || data.getDeviceName().equals("world")){
+                    action(data.getDeviceName() + " meet a alarm");
+                }
+                if(data.getAlarmType()!=2){
+                    action("ignore a alarm");
+                }
+                boolean match = false;
+                if(data.getDeviceName().equals("hello") || data.getDeviceName().equals("world")){
+                    if(data.getAlarmType()==2 && data.getAlarmUrgent()!=1 && data.getAlarmLevel() != 1){
+                        match = true;
+                    }
+                }
+                if(match){
+                    action ("hello world ignore a alarm");
+                }else{
+                    action(data.toString());
+                }
+            }
+
+        }
+    }
     private static final AtomicReference<KieSession> sessionHolder = new AtomicReference();
     private static final String RULESFILE_NAME = "version2.drl";
     private static final String rules =
